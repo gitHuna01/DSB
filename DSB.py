@@ -49,6 +49,19 @@ def save_data(data):
 
 scrum_data = load_data()
 
+# ⏰ 매일 낮 12시 알림 스케줄러 설정
+# 한국 시간(KST) 기준으로 낮 12시 0분 설정
+KST = datetime.timezone(datetime.timedelta(hours=9))
+target_time = datetime.time(hour=12, minute=0, tzinfo=KST)
+
+@tasks.loop(time=target_time)
+async def daily_reminder():
+    # 🚨 여기에 아까 복사한 채널 ID 숫자를 넣어주세요! (따옴표 없이 숫자만)
+    CHANNEL_ID = 1502690601802535086
+    
+    channel = bot.get_channel(CHANNEL_ID)
+    if channel:
+        await channel.send("📢 팀원 여러분! 점심 식사 맛있게 하시고, 데일리 스크럼 내용(`/today`, `/to-do`)을 작성해 주세요!")
 
 @bot.event
 async def on_ready():
