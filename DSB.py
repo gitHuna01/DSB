@@ -4,6 +4,26 @@ from discord.ext import commands
 import json
 import os
 
+# --- 여기부터 웹 서버 설정 (Render 속이기용) ---
+from flask import Flask
+from threading import Thread
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "스크럼 봇이 무사히 살아있습니다!"
+
+def run():
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
+
+def keep_alive():
+    t = Thread(target=run)
+    t.start()
+# --- 여기까지 웹 서버 설정 ---
+
+
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
@@ -44,12 +64,9 @@ async def on_ready():
 @app_commands.describe(task="변경할 할 일을 입력하세요.")
 async def todo(interaction: discord.Interaction, task: str):
     user_id = str(interaction.user.id)
-    
-    # 처음 등록하는 유저라면 빈 문자열('')로 초기화합니다.
     if user_id not in scrum_data:
         scrum_data[user_id] = {'todo': '', 'today': ''}
     
-    # .append() 대신 = 을 사용하여 새로운 내용으로 덮어씁니다.
     scrum_data[user_id]['todo'] = task
     save_data(scrum_data)
     
@@ -60,11 +77,9 @@ async def todo(interaction: discord.Interaction, task: str):
 @app_commands.describe(task="오늘 할 일을 입력하세요.")
 async def today(interaction: discord.Interaction, task: str):
     user_id = str(interaction.user.id)
-    
     if user_id not in scrum_data:
         scrum_data[user_id] = {'todo': '', 'today': ''}
     
-    # 새로운 내용으로 덮어씁니다.
     scrum_data[user_id]['today'] = task
     save_data(scrum_data)
     
@@ -90,7 +105,6 @@ async def daily(interaction: discord.Interaction):
         except Exception:
             name = f"알 수 없는 유저({user_id})"
         
-        # 리스트가 아니라 단일 문자열이므로 바로 출력합니다. 내용이 비어있을 때만 예외 처리합니다.
         todo_text = f"• {tasks['todo']}" if tasks.get('todo') else "• 등록된 일이 없습니다."
         today_text = f"• {tasks['today']}" if tasks.get('today') else "• 등록된 일이 없습니다."
         
@@ -103,6 +117,7 @@ async def daily(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed)
 
 
-# 렌더(Render) 구동을 위한 환경 변수 토큰 불러오기 코드
+# 실행 부분: 가짜 웹사이트를 켜서 렌더를 안심시킨 뒤, 봇을 실행합니다.
+keep_alive() 
 token = os.environ.get("BOT_TOKEN")
 bot.run(token)
