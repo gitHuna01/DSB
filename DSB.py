@@ -3,6 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 import json
 import os
+import datetime
 
 # --- 여기부터 웹 서버 설정 (Render 속이기용) ---
 from flask import Flask
